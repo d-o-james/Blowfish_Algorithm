@@ -1,3 +1,4 @@
+# Python S-boxes, stored as tuple of tuples containing 256 entries of 32-bit integers
 S_boxes = (
   (
     0xd1310ba6, 0x98dfb5ac, 0x2ffd72db, 0xd01adfb7, 0xb8e1afed, 0x6a267e96,
