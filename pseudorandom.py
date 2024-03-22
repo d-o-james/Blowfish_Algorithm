@@ -9,10 +9,10 @@ def pseudorandom(input_num):
     # And so on
 
     # Retrieve 32-bit numbers from S-boxes based on the bytes
-    s1 = S_BOXES[0][byte_1 % len(S_BOXES[0])]
-    s2 = S_BOXES[1][byte_2 % len(S_BOXES[1])]
-    s3 = S_BOXES[2][byte_3 % len(S_BOXES[2])]
-    s4 = S_BOXES[3][byte_4 % len(S_BOXES[3])]
+    s1 = S_boxes[0][byte_1 % len(S_boxes[0])]
+    s2 = S_boxes[1][byte_2 % len(S_boxes[1])]
+    s3 = S_boxes[2][byte_3 % len(S_boxes[2])]
+    s4 = S_boxes[3][byte_4 % len(S_boxes[3])]
 
     # Combine using bitwise operations
     s12 = (s1 + s2) & 0xFFFFFFFF # 0xFFFFFFFF represents 32 1's in binary; max value represented by 32 bits
