@@ -18,4 +18,4 @@ def Enc(M, K):
 
     preprocessed_c = m_L + m_R # combines left and right sides
 
-    return post_processing(preprocessed_c, subkey_array[16], subkey_array[17]).decode("utf-8") #returns the values after post processing
+    return post_processing(preprocessed_c, subkey_array[17], subkey_array[16]).decode("utf-8") #returns the values after post processing
