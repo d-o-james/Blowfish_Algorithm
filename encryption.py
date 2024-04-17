@@ -1,3 +1,7 @@
+from subkey_gen.py import subkey_gen
+from pseudorandom.py import pseudorandom
+from post_processing.py import post_processing
+
 def Encryption(Text, Key):
 
     Text = Text.encode("utf-8") # encodes string to bit string
