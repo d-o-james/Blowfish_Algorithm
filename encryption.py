@@ -1,21 +1,21 @@
-def Enc(M, K):
+def Encryption(Text, Key):
 
-    M = M.encode("utf-8") # encodes string to bit string
+    Text = Text.encode("utf-8") # encodes string to bit string
 
     subkey_array = subkey_gen(K) # gets subkey array
 
-    m_L = M[0:len(M)//2]
-    m_R = M[len(M)//2:]
+    T_L = Text[0:len(M)//2]
+    T_R = Text[len(M)//2:]
     #splits strings into left and right halfs
 
     for i in range(16): # blowfish has a 15 round
-        temp = m_L ^ subkey_array[i].encode("utf-8")
-        temp = pseudorandom(temp) ^ m_R
+        temp = T_L ^ subkey_array[i].encode("utf-8")
+        temp = pseudorandom(temp) ^ T_R
         # uses temp values to get the new left sides value after being run through F_k
         
-        m_R = m_L # copies left side to new right side
-        m_L = temp # copies f_k's output to the new left side
+        T_R = T_L # copies left side to new right side
+        T_L = temp # copies f_k's output to the new left side
 
-    preprocessed_c = m_L + m_R # combines left and right sides
+    preprocessed_c = T_L + T_R # combines left and right sides
 
     return post_processing(preprocessed_c, subkey_array[17], subkey_array[16]).decode("utf-8") #returns the values after post processing
