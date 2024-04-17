@@ -1,3 +1,7 @@
+from subkey_gen.py import subkey_gen
+from pseudorandom.py import pseudorandom
+from post_processing.py import post_processing
+
 def Decryption(cipher, key):
 
     cipher = cipher.encode("utf-8") # encodes string to bit string
@@ -18,4 +22,5 @@ def Decryption(cipher, key):
 
     preprocessed_c = cipher_L + cipher_R # combines left and right sides
 
-    return post_processing(preprocessed_c, subkey_array[0], subkey_array[1]).decode("utf-8") #returns the values after post processing
+    #returns the values after post processing
+    return post_processing(preprocessed_c, subkey_array[0], subkey_array[1]).decode("utf-8")
