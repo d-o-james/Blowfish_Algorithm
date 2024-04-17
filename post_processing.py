@@ -1,11 +1,11 @@
-def post_processing(parray, text):
+def post_processing(text, subkey_l, subkey_r):
   #S plit left and right
   left = text >> 32       # Gets rid of the 32 bits on the right by shifting right 
   right = text & 0xFFFFFFFF    # Gets rid of the 32 bits on the left by performing the & operation on the whole 64 bit text with only 32 bits
   
   # Final xor with parray
-  left = left ^ parray[16]     
-  right = right ^ parray[17]
+  left = left ^ subkey_l     
+  right = right ^ subkey_r
 
   # Swap left and right
   left, right = right, left
