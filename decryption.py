@@ -1,4 +1,4 @@
-def decrypt(cipher, key):
+def Dec(cipher, key):
 
     cipher = cipher.encode("utf-8") # encodes string to bit string
 
