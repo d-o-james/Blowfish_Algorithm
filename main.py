@@ -183,13 +183,103 @@ S_boxes = (
   ),
 )
 
-def bitwise_xor_bytes(a, b):
-    result_int = int.from_bytes(a, byteorder="big") ^ int.from_bytes(b, byteorder="big")
-    return result_int.to_bytes(max(len(a), len(b)), byteorder="big")
+def hex2bin(s):
+    mp = {'0': "0000",
+          '1': "0001",
+          '2': "0010",
+          '3': "0011",
+          '4': "0100",
+          '5': "0101",
+          '6': "0110",
+          '7': "0111",
+          '8': "1000",
+          '9': "1001",
+          'A': "1010",
+          'B': "1011",
+          'C': "1100",
+          'D': "1101",
+          'E': "1110",
+          'F': "1111"}
+    bin = ""
+    for i in range(len(s)):
+        bin = bin + mp[s[i]]
+    return bin
 
-def bitwise_and_bytes(a, b):
-    result_int = int.from_bytes(a, byteorder="big") & int.from_bytes(b, byteorder="big")
-    return result_int.to_bytes(max(len(a), len(b)), byteorder="big")
+def bin2hex(s):
+    mp = {"0000": '0',
+          "0001": '1',
+          "0010": '2',
+          "0011": '3',
+          "0100": '4',
+          "0101": '5',
+          "0110": '6',
+          "0111": '7',
+          "1000": '8',
+          "1001": '9',
+          "1010": 'A',
+          "1011": 'B',
+          "1100": 'C',
+          "1101": 'D',
+          "1110": 'E',
+          "1111": 'F'}
+    hex = ""
+    for i in range(0, len(s), 4):
+        ch = ""
+        ch = ch + s[i]
+        ch = ch + s[i + 1]
+        ch = ch + s[i + 2]
+        ch = ch + s[i + 3]
+        hex = hex + mp[ch]
+ 
+    return hex
+
+def bin2dec(binary_string):
+ 
+    decimal_number = 0
+    power = len(binary_string) - 1
+    for digit in binary_string:
+        if digit == '1':
+            decimal_number += 2 ** power
+        power -= 1
+    return decimal_number
+
+def dec2bin(decimal_number):
+    if decimal_number == 0:
+        return '0'
+    binary_string = ''
+    while decimal_number > 0:
+        remainder = decimal_number % 2
+        binary_string = str(remainder) + binary_string
+        decimal_number //= 2
+    return binary_string
+
+def shift_right(k, nth_shifts):
+    s = ""
+    for i in range(nth_shifts):
+        for j in range(1, len(k), -1):
+            s = s + k[j]
+        s = s + k[0]
+        k = s
+        s = ""
+    return k
+
+def xor(a, b):
+    ans = ""
+    for i in range(len(a)):
+        if a[i] == b[i]:
+            ans = ans + "0"
+        else:
+            ans = ans + "1"
+    return ans
+
+def bitwand(a, b):
+    ans = ""
+    for i in range(len(a)):
+        if a[i] == b[i] and a[i] == '1':
+            ans = ans + "1"
+        else:
+            ans = ans + "0"
+    return ans
 
 P_array = (
   0x243f6a88, 0x85a308d3, 0x13198a2e, 0x03707344, 0xa4093822, 0x299f31d0,
@@ -205,27 +295,25 @@ def subkey_gen(key):
     while len(key) < 576:
         key += key
 
-    key = key.encode('utf-8')
+    key = hex2bin(key)
 
     for i in range(18):
-        print(P_array[i])
-        byte_value = bytes([(P_array[i] >> 8) & 0xFF, P_array[i] & 0xFF])
-        out = bitwise_xor_bytes(byte_value, key[i*32:(i+1)*32])
-        subkey_list.append(out) 
-
+        subkey_list.append(xor(dec2bin(P_array[i]), key[i*32:(i+1)*32]))
+  
+    for i in range(len(subkey_list)):
+        if len(subkey_list[i]) != 32:
+            while len(subkey_list[i]) != 32:
+                subkey_list[i] = '0' + subkey_list[i]
+    
     return subkey_list
 
 def pseudorandom(input_num):
     # Extract bytes from input num
-    temp_int = int.from_bytes(input_num, "big")
-    byte_1 = (temp_int >> 24) & 0b11111111 # Uses bitwise operations to extract bytes @TODO EVERYTHING WHEN WRONG HERE
-    byte_2 = (temp_int >> 16) & 0b11111111 # >> is binary shift (equivalent to dividing by 2^num of bits shifted)
-    byte_3 = (temp_int >> 8) & 0b11111111  # & is binary AND with 11111111 (equivalent to modulo 2^8)
-    byte_4 = temp_int & 0b11111111
-    # Consider decimal value 1024; extract 1 (thousands place) by doing 1024 / 10^3 = 1.024, take integer component of answer (1)
-    # Extract 0 (hundreds place) by removing 1st digit (1024 % 1000 = 24), do 24 / 10^2 = 0.24, integer component of answer (0)
-    # And so on
-
+    byte_1 = bin2dec(input_num[0:len(input_num)//4])
+    byte_2 = bin2dec(input_num[len(input_num)//4:len(input_num)//2])
+    byte_3 = bin2dec(input_num[len(input_num)//2:(len(input_num)*3)//4]) 
+    byte_4 = bin2dec(input_num[(len(input_num)*3)//4:len(input_num)])
+    
     # Retrieve 32-bit numbers from S-boxes based on the bytes
     s1 = S_boxes[0][byte_1]
     s2 = S_boxes[1][byte_2]
@@ -235,78 +323,86 @@ def pseudorandom(input_num):
     # Combine using bitwise operations
     s12 = (s1 + s2) & 0xFFFFFFFF # 0xFFFFFFFF represents 32 1's in binary; max value represented by 32 bits
     s123 = s12 ^ s3              # & 0xFFFFFFFF: any bits beyond bit 32 of result are set to 0, preventing overflow
-    output_num = (s123 + s4) & 0xFFFFFFFF
+    output_num = dec2bin((s123 + s4) & 0xFFFFFFFF)
+
+    if len(output_num) != 32:
+        while len(output_num) != 32:
+            output_num = '0' + output_num
+
 
     return output_num
 
 def post_processing(text, subkey_l, subkey_r):
-  #S plit left and right
-  temp_int = int.from_bytes(text, "big") #TODO HERE
-  left = temp_int >> 32       # Gets rid of the 32 bits on the right by shifting right 
-  right = temp_int & 0xFFFFFFFF    # Gets rid of the 32 bits on the left by performing the & operation on the whole 64 bit text with only 32 bits
-  
-  # Final xor with parray
-  left = left ^ int.from_bytes(subkey_l, "big")   
-  right = right ^ int.from_bytes(subkey_r, "big")
+    #S plit left and right
+    left = text[0:len(text)//2]
+    right = text[len(text)//2: len(text)]
 
-  # Swap left and right
-  left, right = right, left
+    # Final xor with parray
+    left = xor(left, subkey_l)   
+    right = xor(right, subkey_r)
 
-  # Recombine the two halfs
-  cipher_text = (left << 32) | right   # Shift the 32 left bits left, to make it 64 bits with lower 32 bits all 0, then or with right bits
+    # Swap left and right
+    left, right = right, left
 
-  return cipher_text
+    # Recombine the two halfs
+    cipher_text = left + right 
+
+    return bin2hex(cipher_text)
+
+def pre_processing(text, subkey_l, subkey_r):
+    left = text[0:len(text)//2]
+    right = text[len(text)//2: len(text)]
+
+    left, right = right, left
+
+    left = xor(left, subkey_l)   
+    right = xor(right, subkey_r)
+
+    return left, right
 
 def Encryption(Text, Key):
-
-    Text = Text.encode("utf-8") # encodes string to bit string
-
     subkey_array = subkey_gen(Key) # gets subkey array
 
-    T_L = Text[0:len(Text)//2]
-    T_R = Text[len(Text)//2:]
+    T_L = hex2bin(Text[0:(len(Text)//2)])
+    T_R = hex2bin(Text[(len(Text)//2):len(Text)])
     #splits strings into left and right halfs
 
     for i in range(16): # blowfish has a 15 round
-        temp = bitwise_xor_bytes(T_L, subkey_array[i])
-        temp = bitwise_xor_bytes(pseudorandom(temp).to_bytes(32), T_R)
+        temp = xor(T_L, subkey_array[i])
+        temp = xor(pseudorandom(temp), T_R)
         # uses temp values to get the new left sides value after being run through F_k
         
         T_R = T_L # copies left side to new right side
         T_L = temp # copies f_k's output to the new left side
 
-    preprocessed_c = T_L + T_R # combines left and right sides
+    preprocessed_c = T_L + T_R
 
-    return post_processing(preprocessed_c, subkey_array[17], subkey_array[16]).to_bytes(64, "big")#.decode("utf-8") #returns the values after post processing
+    return post_processing(preprocessed_c, subkey_array[16], subkey_array[17])
 
 def Decryption(cipher, key):
 
-    cipher = cipher.encode("utf-8") # encodes string to bit string
+    subkey_array = subkey_gen(key) # gets subkey array
+    cipher_L, cipher_R = pre_processing(hex2bin(cipher), subkey_array[16], subkey_array[17])
 
-    subkey_array = subkey_gen(K) # gets subkey array
-
-    cipher_L = cipher[0:len(cipher)//2]
-    cipher_R = cipher[len(cipher)//2:]
-    #splits strings into left and right halfs
 
     for i in range(16): # blowfish has a 15 round
-        temp = cipher_L ^ subkey_array[15-i].encode("utf-8")
-        temp = pseudorandom(temp) ^ cipher_R
-        # uses temp values to get the new left sides value after being run through F_k
+        temp = xor(cipher_R, subkey_array[15-i])
+        temp = xor(pseudorandom(temp), cipher_L)
+        # uses temp values to get the new right sides value after being run through F_k
         
-        cipher_R = cipher_L # copies left side to new right side
-        cipher_L = temp # copies f_k's output to the new left side
+        cipher_L = cipher_R # copies left side to new right side
+        cipher_R = temp # copies f_k's output to the new left side
 
-    preprocessed_c = cipher_L + cipher_R # combines left and right sides
-
-    #returns the values after post processing
-    return post_processing(preprocessed_c, subkey_array[0], subkey_array[1]).decode("utf-8")
+    return bin2hex(cipher_L + cipher_R)#post_processing(preprocessed_c, subkey_array[1], subkey_array[0])
 
 if __name__ == '__main__':
 
-    string = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
-    key = 'xGD6nbjftQMIzLeOw7qdoTPamb5HS0N0'
+    string = 'AAAAAAAAAAAAAAAB'
+    key = 'AAAAAAAAAAAAAAAA'
+    enc = Encryption(string, key)
 
-    print(Encryption(string, key))
+    print(string)
+    print(enc)
+    print(Decryption(enc, key))
 
 
